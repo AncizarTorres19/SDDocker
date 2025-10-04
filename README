@@ -1,0 +1,11 @@
+# Demo Node/Express + Docker (Gateway + Catalog + Orders)
+
+
+## Requisitos
+- Docker y Docker Compose v2
+
+
+## Levantar
+```bash
+docker compose build
+docker compose up -d

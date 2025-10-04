@@ -1,0 +1,75 @@
+version: '3.9'
+
+
+services:
+gateway:
+build: ./gateway
+env_file: .env
+environment:
+- GATEWAY_PORT=${GATEWAY_PORT}
+- CATALOG_PORT=${CATALOG_PORT}
+- ORDERS_PORT=${ORDERS_PORT}
+- JWT_SECRET=${JWT_SECRET}
+ports:
+- "${GATEWAY_PORT}:${GATEWAY_PORT}"
+depends_on:
+- catalog
+- orders
+networks: [backend]
+
+
+catalog:
+build: ./services/catalog
+env_file: .env
+environment:
+- CATALOG_PORT=${CATALOG_PORT}
+- DATABASE_URL=${DATABASE_URL_CATALOG}
+- REDIS_URL=${REDIS_URL}
+depends_on:
+- postgres
+- redis
+networks: [backend]
+ports:
+- "${CATALOG_PORT}:${CATALOG_PORT}"
+
+
+orders:
+build: ./services/orders
+env_file: .env
+environment:
+- ORDERS_PORT=${ORDERS_PORT}
+- DATABASE_URL=${DATABASE_URL_ORDERS}
+depends_on:
+- postgres
+networks: [backend]
+ports:
+- "${ORDERS_PORT}:${ORDERS_PORT}"
+
+
+postgres:
+image: postgres:16-alpine
+environment:
+- POSTGRES_PASSWORD=postgres
+- POSTGRES_USER=postgres
+volumes:
+- pgdata:/var/lib/postgresql/data
+- ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+networks: [backend]
+ports:
+- "5432:5432"
+
+
+redis:
+image: redis:7-alpine
+networks: [backend]
+ports:
+- "6379:6379"
+
+
+networks:
+backend:
+driver: bridge
+
+
+volumes:
+pgdata:
