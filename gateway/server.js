@@ -36,6 +36,9 @@ app.use(limiter);
 
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'gateway' }));
 
+// Ruta raíz para chequear el gateway desde el navegador
+app.get('/', (req, res) => res.json({ service: 'gateway', routes: ['/catalog', '/orders', '/health', '/auth/token'] }));
+
 
 // Ruta de demo para emitir un JWT
 app.post('/auth/token', (req, res) => {
@@ -55,23 +58,23 @@ catch { return res.status(401).json({ error: 'invalid token' }); }
 }
 
 
-// Proxy a Catalog
+// Proxy a Catalog (mapeado en /catalog para coincidir con las pruebas desde host)
 const catalogTarget = `http://catalog:${process.env.CATALOG_PORT || 3001}`;
-app.use('/api/catalog', createProxyMiddleware({
-target: catalogTarget,
-changeOrigin: true,
-pathRewrite: { '^/api/catalog': '/' },
-onProxyReq(proxyReq, req) { proxyReq.setHeader('x-request-id', req.id); }
+app.use('/catalog', createProxyMiddleware({
+	target: catalogTarget,
+	changeOrigin: true,
+	pathRewrite: { '^/catalog': '/' },
+	onProxyReq(proxyReq, req) { proxyReq.setHeader('x-request-id', req.id); }
 }));
 
 
 // Proxy a Orders (protección opcional)
 const ordersTarget = `http://orders:${process.env.ORDERS_PORT || 3002}`;
-app.use('/api/orders', /*auth,*/ createProxyMiddleware({
-target: ordersTarget,
-changeOrigin: true,
-pathRewrite: { '^/api/orders': '/' },
-onProxyReq(proxyReq, req) { proxyReq.setHeader('x-request-id', req.id); }
+app.use('/orders', /*auth,*/ createProxyMiddleware({
+	target: ordersTarget,
+	changeOrigin: true,
+	pathRewrite: { '^/orders': '/' },
+	onProxyReq(proxyReq, req) { proxyReq.setHeader('x-request-id', req.id); }
 }));
 
 
